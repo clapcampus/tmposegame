@@ -11,9 +11,17 @@
       <button type="button" id="startBtn" onclick="init()">Start</button>
       <button type="button" id="stopBtn" onclick="stop()" disabled>Stop</button>
     </div>
-    <div class="canvas-container">
-      <canvas id="canvas"></canvas>
-      <div id="max-prediction"></div>
+    <div id="main-container">
+      <div id="webcam-container" class="panel">
+        <div id="score-board">Score: 0 | Level: 1</div>
+        <h3>Webcam</h3>
+        <!-- Webcam canvas will be appended here -->
+      </div>
+      <div id="game-container" class="panel">
+        <h3>Game</h3>
+        <canvas id="game-canvas"></canvas>
+        <div id="max-prediction"></div>
+      </div>
     </div>
     <div id="label-container"></div>
 

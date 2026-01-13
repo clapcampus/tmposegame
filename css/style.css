@@ -40,12 +40,25 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.canvas-container {
-  position: relative;
-  display: inline-block;
+#main-container {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
 }
 
-#canvas {
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.panel h3 {
+  margin-bottom: 10px;
+}
+
+canvas {
   border: 1px solid #ccc;
   border-radius: 4px;
   display: block;
@@ -53,7 +66,8 @@ button:disabled {
 
 #max-prediction {
   position: absolute;
-  top: 10px;
+  top: 50px;
+  /* Adjust top to specific offset */
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(0, 0, 0, 0.7);
@@ -70,6 +84,19 @@ button:disabled {
   flex-direction: column;
   gap: 8px;
   min-width: 200px;
+}
+
+#score-board {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 #label-container div {

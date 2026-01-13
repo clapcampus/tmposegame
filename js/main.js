@@ -24,8 +24,10 @@ async function init() {
   try {
     // 1. PoseEngine 초기화
     poseEngine = new PoseEngine("./my_model/");
+    // 캔버스 크기를 400으로 증가
+    const size = 400;
     const { maxPredictions, webcam } = await poseEngine.init({
-      size: 200,
+      size: size,
       flip: true
     });
 
@@ -39,10 +41,15 @@ async function init() {
     gameEngine = new GameEngine();
 
     // 4. 캔버스 설정
-    const canvas = document.getElementById("canvas");
-    canvas.width = 200;
-    canvas.height = 200;
+    const canvas = document.getElementById("game-canvas"); // Game Canvas
+    canvas.width = size;
+    canvas.height = size;
     ctx = canvas.getContext("2d");
+
+    // Webcam Canvas를 DOM에 추가
+    if (webcam && webcam.canvas) {
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
+    }
 
     // 5. Label Container 설정
     labelContainer = document.getElementById("label-container");
@@ -57,6 +64,11 @@ async function init() {
 
     // 7. PoseEngine 시작
     poseEngine.start();
+
+    // 8. GameEngine 시작
+    if (gameEngine) {
+      gameEngine.start();
+    }
 
     stopBtn.disabled = false;
   } catch (error) {
@@ -120,15 +132,35 @@ function handlePrediction(predictions, pose) {
  * @param {Object} pose - PoseNet 포즈 데이터
  */
 function drawPose(pose) {
+  // 웹캠 캔버스 컨텍스트 가져오기 (스켈레톤을 웹캠 위에 그리기 위함)
   if (poseEngine.webcam && poseEngine.webcam.canvas) {
-    ctx.drawImage(poseEngine.webcam.canvas, 0, 0);
+    const webcamCtx = poseEngine.webcam.canvas.getContext("2d");
 
-    // 키포인트와 스켈레톤 그리기
+    // 웹캠 프레임은 이미 webcam.canvas에 업데이트됨 (poseEngine.loop에서)
+    // 따라서 별도로 drawImage할 필요 없이, 그 위에 스켈레톤만 그리면 됨
+    // 매 프레임마다 웹캠 캔버스는 초기화되거나 덮어쓰여질 수 있으니 확인 필요
+    // tmPose.Webcam은 내부적으로 video 요소를 캔버스에 그림.
+
+    // 키포인트와 스켈레톤 그리기 (웹캠 위에)
     if (pose) {
       const minPartConfidence = 0.5;
-      tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
-      tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
+      tmPose.drawKeypoints(pose.keypoints, minPartConfidence, webcamCtx);
+      tmPose.drawSkeleton(pose.keypoints, minPartConfidence, webcamCtx);
     }
+  }
+
+  // 게임 화면 그리기 (게임 캔버스)
+  // 게임 화면 지우기 (투명 배경)
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  // 배경색 채우기 (선택 사항, 예: 흰색 배경)
+  ctx.fillStyle = "#f0f0f0";
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  // 게임 엔진 업데이트 및 그리기
+  if (gameEngine && gameEngine.isGameActive) {
+    gameEngine.update();
+    gameEngine.draw(ctx);
   }
 }
 
@@ -139,14 +171,12 @@ function startGameMode(config) {
     return;
   }
 
-  gameEngine.setCommandChangeCallback((command) => {
-    console.log("새로운 명령:", command);
-    // UI 업데이트 로직 추가 가능
-  });
-
   gameEngine.setScoreChangeCallback((score, level) => {
     console.log(`점수: ${score}, 레벨: ${level}`);
-    // UI 업데이트 로직 추가 가능
+    const scoreBoard = document.getElementById("score-board");
+    if (scoreBoard) {
+      scoreBoard.innerText = `Score: ${score} | Level: ${level}`;
+    }
   });
 
   gameEngine.setGameEndCallback((finalScore, finalLevel) => {
@@ -154,5 +184,5 @@ function startGameMode(config) {
     alert(`게임 종료!\n최종 점수: ${finalScore}\n최종 레벨: ${finalLevel}`);
   });
 
-  gameEngine.start(config);
+  gameEngine.start();
 }
